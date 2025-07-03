@@ -1,4 +1,4 @@
-# Integrated Hospital Management System (IHMS) 🏥
+# Integrated Hospital Management System (ihms) 🏥
 
 IHMS is a smart, integrated healthcare solution aimed at digitizing and optimizing hospital workflows, especially in remote or under-resourced regions. It combines IoT-based patient monitoring, real-time ambulance tracking, and a web-based dashboard, all backed by a secure cloud infrastructure.
 
