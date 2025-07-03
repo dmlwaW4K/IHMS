@@ -45,7 +45,7 @@ IHMS/
 
 1. Clone this repository:
 ```bash
-git clone https://github.com/your-username/IHMS.git
+git clone https://github.com/dmlwaW4K/IHMS.git
 cd IHMS
 ```
 
