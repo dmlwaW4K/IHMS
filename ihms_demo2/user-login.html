@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>User Login | IHMS</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f8f8fb;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .login-container {
+            background: white;
+            padding: 2em 2.5em;
+            margin-top: 5vh;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px #d8d8ea;
+            min-width: 290px;
+            max-width: 350px;
+        }
+        h2 {
+            text-align: center;
+            color: #345dbb;
+        }
+        label {
+            display: block;
+            margin-top: 1em;
+            color: #345dbb;
+        }
+        input[type="email"],
+        input[type="password"] {
+            width: 100%;
+            padding: .7em;
+            margin-top: 0.5em;
+            border: 1px solid #b8b8e8;
+            border-radius: 8px;
+            font-size: 1em;
+        }
+        .button {
+            width: 100%;
+            background: #345dbb;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: .7em;
+            margin-top: 1em;
+            font-size: 1em;
+            cursor: pointer;
+        }
+        .google-btn {
+            background: #fff;
+            color: #333;
+            border: 1px solid #d8d8ea;
+            font-size: 1em;
+            margin-top: 1em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .google-btn img {
+            height: 18px;
+            margin-right: 8px;
+        }
+        #error-msg, #g-error-msg {
+            color: #d40000;
+            margin-top: 1em;
+            font-size: .97em;
+            text-align: center;
+        }
+        .back-link {
+            display: inline-block;
+            margin-top: 1.5em;
+            text-decoration: none;
+            color: #666cc2;
+            font-size: 1em;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h2>User Login</h2>
+
+        <form id="login-form">
+            <label for="email">Email</label>
+            <input id="email" type="email" required autocomplete="email" />
+
+            <label for="password">Password</label>
+            <input id="password" type="password" required autocomplete="current-password" />
+
+            <button class="button" id="login-btn" type="submit">Login</button>
+        </form>
+
+        <div id="error-msg"></div>
+
+        <button class="button google-btn" id="google-login-btn">
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google Logo" />
+            Sign in with Google
+        </button>
+        <div id="g-error-msg"></div>
+
+        <a href="role-login.html" class="back-link">&larr; Back to Role Selection</a>
+    </div>
+
+    <!-- Firebase scripts (Needed for Firebase Auth & Firestore) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <script>
+        // Firebase config (from your app.js)
+        const firebaseConfig = {
+            apiKey: "AIzaSyDiutUzakrilPP2UW4jkg1LNdaibbpETIE",
+            authDomain: "ihms-login.firebaseapp.com",
+            projectId: "ihms-login",
+            storageBucket: "ihms-login.firebasestorage.app",
+            messagingSenderId: "532734352548",
+            appId: "1:532734352548:web:14a5726281b85644305a31",
+            measurementId: "G-GJ901E6FJW"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // Role-based login (for use on doctor/admin/user login pages)
+        async function handleRoleLogin(e) {
+            e.preventDefault();
+            document.getElementById('error-msg').textContent = '';
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            // Get role from query string (?role=doctor etc). Default to 'user'
+            const urlParams = new URLSearchParams(window.location.search);
+            let role = urlParams.get('role') || 'user';
+
+            try {
+                const cred = await auth.signInWithEmailAndPassword(email, password);
+                const userDoc = await db.collection('users').doc(cred.user.uid).get();
+                if (!userDoc.exists || userDoc.data().role !== role) {
+                    throw new Error('Invalid role for this account!');
+                }
+                // Redirect based on role
+                if (role === 'doctor') {
+                    window.location.href = 'doctor-dashboard.html';
+                } else if (role === 'admin') {
+                    window.location.href = 'admin-dashboard.html';
+                } else if (role === 'user') {
+                    window.location.href = 'user-dashboard.html';
+                } else {
+                    window.location.href = 'role-login.html';
+                }
+            } catch (err) {
+                document.getElementById('error-msg').textContent = err.message;
+                auth.signOut();
+            }
+        }
+
+        // Google login for user only
+        async function handleGoogleLogin() {
+            document.getElementById('g-error-msg').textContent = '';
+            const provider = new firebase.auth.GoogleAuthProvider();
+            try {
+                const result = await auth.signInWithPopup(provider);
+                const userRef = db.collection('users').doc(result.user.uid);
+                const doc = await userRef.get();
+                if (!doc.exists) {
+                    // First-time user, register as 'user'
+                    await userRef.set({ role: 'user', email: result.user.email });
+                    window.location.href = 'user-dashboard.html';
+                    return;
+                }
+                if (doc.data().role !== 'user') {
+                    throw new Error('You are not authorized as a general user!');
+                }
+                // Proceed to user dashboard
+                window.location.href = 'user-dashboard.html';
+            } catch (error) {
+                try {
+                    document.getElementById('g-error-msg').textContent = error.message;
+                } catch {
+                    // If g-error-msg doesn't exist, do nothing
+                }
+                auth.signOut();
+            }
+        }
+
+        // Attach events
+        document.getElementById('login-form').addEventListener('submit', handleRoleLogin);
+        document.getElementById('google-login-btn').addEventListener('click', handleGoogleLogin);
+
+    </script>
+</body>
+</html>

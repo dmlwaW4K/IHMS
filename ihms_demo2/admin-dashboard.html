@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>IHMS Admin Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(to right, #e0f7fa, #ffffff);
+      padding: 1.5rem;
+      color: #333;
+    }
+
+    .navbar {
+      background: #24c6dc;
+      color: white;
+      padding: 1rem 2rem;
+      border-radius: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .navbar h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+
+    .clock {
+      font-weight: 600;
+      font-size: 1rem;
+    }
+
+    .section {
+      margin-bottom: 2rem;
+    }
+
+    .section h2 {
+      font-size: 1.3rem;
+      color: #007c91;
+      margin-bottom: 1rem;
+    }
+
+    .appointment-card {
+      background: #f9ffff;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      border-left: 5px solid #24c6dc;
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+
+    .appointment-card.confirmed {
+      border-left-color: #28a745;
+    }
+
+    .appointment-card p {
+      margin: 0.3rem 0;
+      font-size: 0.95rem;
+    }
+
+    .appointment-actions {
+      margin-top: 0.5rem;
+    }
+
+    .appointment-actions button {
+      margin-right: 0.5rem;
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 6px;
+      color: white;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    .accept-btn {
+      background-color: #28a745;
+    }
+
+    .cancel-btn {
+      background-color: #dc3545;
+    }
+
+    .dashboard-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .card {
+      background: #ffffff;
+      padding: 1.5rem;
+      border-radius: 15px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.08);
+    }
+
+    .card h3 {
+      font-size: 1.2rem;
+      color: #24c6dc;
+      margin-bottom: 1rem;
+    }
+
+    .card p {
+      font-size: 0.95rem;
+      margin: 0.4rem 0;
+    }
+
+    @media (max-width: 480px) {
+      .navbar h1 {
+        font-size: 1.2rem;
+      }
+
+      .clock {
+        font-size: 0.9rem;
+      }
+    }
+  </style>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+</head>
+<body>
+
+  <div class="navbar">
+    <h1>IHMS Admin Dashboard</h1>
+    <div class="clock" id="clock">--:--:--</div>
+  </div>
+
+  <!-- Live Bed / OT / Vehicle Availability -->
+  <div class="dashboard-cards">
+    <div class="card">
+      <h3>🛏️ IPD Bed Availability</h3>
+      <p>General: 12 / 20 beds available</p>
+      <p>ICU: 5 / 10 beds available</p>
+      <p>Isolation: 2 / 5 beds available</p>
+    </div>
+
+    <div class="card">
+      <h3>🏥 OT Status</h3>
+      <p>OT-1: Available</p>
+      <p>OT-2: In Use</p>
+      <p>OT-3: Cleaning</p>
+    </div>
+
+    <div class="card">
+      <h3>🚑 Vehicle Availability</h3>
+      <p>Ambulance-1: Available</p>
+      <p>Ambulance-2: On Route</p>
+      <p>Transport Van: Maintenance</p>
+    </div>
+  </div>
+
+  <!-- PENDING -->
+  <div class="section">
+    <h2>🟡 Pending Appointments</h2>
+    <div id="pendingList">Loading...</div>
+  </div>
+
+  <!-- CONFIRMED -->
+  <div class="section">
+    <h2>🟢 Confirmed Appointments</h2>
+    <div id="confirmedList">Loading...</div>
+  </div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDiutUzakrilPP2UW4jkg1LNdaibbpETIE",
+      authDomain: "ihms-login.firebaseapp.com",
+      projectId: "ihms-login"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const auth = firebase.auth();
+
+    // Live Clock
+    setInterval(() => {
+      document.getElementById("clock").innerText = new Date().toLocaleTimeString();
+    }, 1000);
+
+    // Auth Check
+    auth.onAuthStateChanged((user) => {
+      if (!user) window.location.href = "login.html";
+    });
+
+    const pendingList = document.getElementById("pendingList");
+    const confirmedList = document.getElementById("confirmedList");
+
+    function renderAppointments() {
+      db.collection("appointments").orderBy("createdAt", "desc").onSnapshot(snapshot => {
+        pendingList.innerHTML = "";
+        confirmedList.innerHTML = "";
+
+        if (snapshot.empty) {
+          pendingList.innerHTML = "<p>No appointments found.</p>";
+          confirmedList.innerHTML = "<p>No confirmed appointments.</p>";
+          return;
+        }
+
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          const card = document.createElement("div");
+          card.className = "appointment-card";
+          if (data.status === "accepted") {
+            card.classList.add("confirmed");
+          }
+
+          card.innerHTML = `
+            <p><strong>Name:</strong> ${data.name}</p>
+            <p><strong>DOB:</strong> ${data.dob}</p>
+            <p><strong>Hospital:</strong> ${data.hospital}</p>
+            <p><strong>Treatment:</strong> ${data.treatment}</p>
+            <p><strong>Status:</strong> ${data.status}</p>
+          `;
+
+          if (data.status === "pending") {
+            const actionDiv = document.createElement("div");
+            actionDiv.className = "appointment-actions";
+            actionDiv.innerHTML = `
+              <button class="accept-btn" onclick="updateStatus('${doc.id}', 'accepted')">Accept</button>
+              <button class="cancel-btn" onclick="updateStatus('${doc.id}', 'cancelled')">Cancel</button>
+            `;
+            card.appendChild(actionDiv);
+            pendingList.appendChild(card);
+          } else if (data.status === "accepted") {
+            confirmedList.appendChild(card);
+          }
+        });
+      });
+    }
+
+    function updateStatus(id, status) {
+      db.collection("appointments").doc(id).update({ status })
+        .then(() => {
+          console.log("Status updated to:", status);
+        })
+        .catch((err) => {
+          alert("Error updating status: " + err.message);
+        });
+    }
+
+    renderAppointments();
+  </script>
+</body>
+</html>
