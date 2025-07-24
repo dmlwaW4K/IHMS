@@ -115,7 +115,7 @@ Software Layer: HMS dashboard, REST APIs, cloud database
 
 Fork the repo
 
-Clone it: git clone https://github.com/your-username/IHMS
+Clone it: git clone https://github.com/dmlwaW4K/IHMS
 
 Create a branch: git checkout -b feature-x
 
