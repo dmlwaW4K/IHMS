@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IHMS Admin Login</title>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.5.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.5.2/firebase-auth-compat.js"></script>
+
+  <style>
+    :root {
+      --primary: #0066cc;
+      --success: #28a745;
+      --error: #dc3545;
+      --bg: #f4f7fa;
+      --card-bg: #ffffff;
+      --text-dark: #333;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: var(--bg);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .login-card {
+      background: var(--card-bg);
+      padding: 40px 30px;
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 360px;
+      text-align: center;
+    }
+
+    .logo-text {
+      font-size: 2rem;
+      font-weight: bold;
+      color: var(--primary);
+      margin-bottom: 10px;
+    }
+
+    h2 {
+      color: var(--text-dark);
+      margin-bottom: 20px;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      margin: 12px 0;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 1rem;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background: var(--primary);
+      color: #fff;
+      font-size: 1rem;
+      font-weight: bold;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background: #004999;
+    }
+
+    .error {
+      color: var(--error);
+      margin-top: 10px;
+      font-size: 0.9rem;
+      display: none;
+    }
+
+    .footer {
+      margin-top: 20px;
+      font-size: 0.85rem;
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-card">
+    <div class="logo-text">IHMS</div>
+    <h2>Admin Login</h2>
+    <form id="loginForm">
+      <input type="email" id="email" placeholder="Email" required>
+      <input type="password" id="password" placeholder="Password" required>
+      <div class="error" id="error">Error message</div>
+      <button type="submit">Login</button>
+    </form>
+    <div class="footer">&copy; 2025 IHMS System</div>
+  </div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDiutUzakrilPP2UW4jkg1LNdaibbpETIE",
+      authDomain: "ihms-login.firebaseapp.com",
+      projectId: "ihms-login",
+      storageBucket: "ihms-login.firebasestorage.app",
+      messagingSenderId: "532734352548",
+      appId: "1:532734352548:web:14a5726281b85644305a31",
+      measurementId: "G-GJ901E6FJW"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+
+    document.getElementById("loginForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      const errorDiv = document.getElementById("error");
+
+      firebase.auth().signInWithEmailAndPassword(email, password)
+        .then(() => {
+          window.location.href = "admin-dashboard.html";
+        })
+        .catch((error) => {
+          errorDiv.innerText = error.message;
+          errorDiv.style.display = "block";
+        });
+    });
+  </script>
+</body>
+</html>
