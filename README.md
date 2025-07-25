@@ -39,15 +39,15 @@ The IHMS system is currently partially functional and deployed via GitHub Pages.
 📂 Repository Structure
 
 IHMS/
-├── index.html                 # Landing page
-├── login.html                 # User login page
-├── role-login.html            # Role selector
-├── user-login.html            # Patient login with Google
-├── admin-dashboard.html       # Real-time hospital dashboard
-├── user-dashboard.html        # Patient dashboard
-├── about.html / contact.html  # Static pages
-├── app.js                     # Core logic (JS)
-└── img/                       # Icons and illustrations
+├── index.html             
+├── login.html             
+├── role-login.html        
+├── user-login.html          
+├── admin-dashboard.html     
+├── user-dashboard.html      
+├── about.html / contact.html  
+├── app.js                     
+└── img/                       
 
 🧠 How IHMS is Different
 
