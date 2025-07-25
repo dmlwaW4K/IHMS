@@ -90,14 +90,7 @@ FHIR-ready, REST API
 🧱 System Architecture (Wireframe)
 
 
-
-Key Layers:
-
-Device Layer: GPS units, tablets, QR scanners
-
-Network Layer: 5G for ER/ICU/Ambulance; Wi-Fi/4G fallback
-
-Software Layer: HMS dashboard, REST APIs, cloud database
+<img width="831" height="781" alt="image" src="https://github.com/user-attachments/assets/46ed5ab0-b555-4563-b890-45e1256cfdc9" />
 
 🚀 Future Scope
 
